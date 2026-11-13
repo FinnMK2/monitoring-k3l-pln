@@ -29,6 +29,22 @@ Tes browser memerlukan hasil build dan Chrome/Edge yang terpasang. Tes menggunak
 
 Petunjuk konfigurasi dan deployment Apps Script tersedia di [panduan frontend](<SISTEM MONITORING K3 UPT PLN TANJUNG KARANG/frontend/README.md>).
 
+## Hosting di Vercel
+
+1. Push commit terbaru ke repository GitHub `FinnMK2/monitoring-k3l-pln`.
+2. Masuk ke [Vercel](https://vercel.com/new) dengan akun yang dapat mengakses repository tersebut, lalu import repository.
+3. Atur **Root Directory** menjadi `SISTEM MONITORING K3 UPT PLN TANJUNG KARANG/frontend`.
+4. Gunakan **Framework Preset: Vite**, **Install Command: npm ci**, **Build Command: npm run build**, dan **Output Directory: dist**. Pilih **Node.js 24.x**, sesuai versi mayor yang digunakan untuk pemeriksaan lokal. File `frontend/vercel.json` sudah menetapkan perintah build dan routing aplikasi.
+5. Klik **Deploy**, tunggu status **Ready**, kemudian buka URL yang diberikan Vercel.
+
+Frontend menggunakan URL Apps Script di `frontend/src/gas-config.js` pada hasil build. Environment variable tambahan tidak diperlukan jika deployment tersebut tetap digunakan. Untuk menggantinya, tambahkan `VITE_GAS_URL` di Vercel dengan URL Web App Apps Script yang berakhiran `/exec`, lalu redeploy. Nilai ini adalah URL yang digunakan browser, bukan tempat menyimpan token atau password.
+
+Backend Google Apps Script tetap dijalankan oleh Google. Folder backend tidak perlu diunggah sebagai fungsi Vercel. Pengaturan **Root Directory** di atas membuat Vercel memasang dependency dari package frontend yang benar.
+
+Setelah deploy, buka aplikasi sebagai tamu dan pastikan daftar tahun serta data tampil. Untuk tautan reminder WhatsApp, ubah `FRONTEND_URL` di Apps Script menjadi URL produksi yang benar setelah Vercel memberikannya, simpan, dan perbarui deployment Apps Script yang dipakai aplikasi.
+
+Referensi: [Vite di Vercel](https://vercel.com/docs/frameworks/frontend/vite), [konfigurasi build](https://vercel.com/docs/builds/configure-a-build).
+
 ## Tim
 
 | Anggota | Modul utama |

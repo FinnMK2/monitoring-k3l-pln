@@ -12,6 +12,7 @@ coverage/
 *.local
 .clasprc.json
 .clasp.json
+.vercel/
 
 # Logs and editor state
 logs/

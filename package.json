@@ -1,0 +1,9 @@
+{
+  "name": "monitoring-k3l-workspace",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix \"./SISTEM MONITORING K3 UPT PLN TANJUNG KARANG/frontend\" run dev",
+    "build": "npm --prefix \"./SISTEM MONITORING K3 UPT PLN TANJUNG KARANG/frontend\" run build",
+    "preview": "npm --prefix \"./SISTEM MONITORING K3 UPT PLN TANJUNG KARANG/frontend\" run preview"
+  }
+}

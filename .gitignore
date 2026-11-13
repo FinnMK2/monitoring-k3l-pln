@@ -1,0 +1,24 @@
+# Dependencies and generated output at every project level
+node_modules/
+dist/
+dist-ssr/
+test-results/
+coverage/
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.local
+.clasprc.json
+.clasp.json
+
+# Logs and editor state
+logs/
+*.log
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

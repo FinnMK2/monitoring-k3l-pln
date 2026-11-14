@@ -205,7 +205,25 @@ try {
   console.log('PASS desktop: fresh login, sidebar, existing years, confirmation, duplication, correct Spreadsheet tab');
 
   await send('Page.reload');
+  await waitFor(`document.querySelector('[role="alert"]')?.textContent.includes('Apps Script yang digunakan belum mendukung daftar tahun')`);
+  assert.equal(await evaluate(`!!document.querySelector('input[type="email"]')`), false, 'Refreshing an admin session must not show login');
+  assert.deepEqual(await evaluate(`JSON.parse(sessionStorage.getItem('k3l_session'))`), { role: 'admin' }, 'Persist only the role, never the password');
+  assert.equal(await evaluate(`fixtureCalls.some(call => call.action === 'login')`), false, 'Do not replay credentials on refresh');
+  await evaluate(`window.failYears = false`);
+  await clickText('Coba lagi');
+  await waitFor(`document.querySelector('[aria-label="Tahun pemantauan"]')?.options.length === 3`);
+  assert.equal(await evaluate(`document.querySelector('#main-sidebar').inert`), true);
+  await evaluate(`window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))`);
+  await delay(100);
+  assert.equal(await evaluate(`!!document.querySelector('input[type="email"]')`), false, 'History restoration must preserve an active admin session');
+  await click('[aria-label="Buka profil"]');
+  await clickText('Keluar Akun');
   await waitFor(`!!document.querySelector('input[type="email"]')`);
+  assert.equal(await evaluate(`sessionStorage.getItem('k3l_session')`), null);
+  await send('Page.reload');
+  await waitFor(`!!document.querySelector('input[type="email"]')`);
+  assert.equal(await evaluate(`fixtureCalls.length`), 0, 'Refresh after logout must not restore the previous session');
+  console.log('PASS session: admin survives refresh and history restoration, logout survives refresh, no saved credentials');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   await clickText('Masuk sebagai Tamu (Lihat Saja)');
   await waitFor(`document.querySelector('[role="alert"]')?.textContent.includes('Hubungi administrator')`);
@@ -221,9 +239,26 @@ try {
   await delay(350);
   assert.ok(await evaluate(`document.documentElement.scrollWidth <= innerWidth`), 'Mobile must not overflow horizontally');
   await screenshot('mobile-sidebar-closed');
+  await send('Page.reload');
+  await waitFor(`document.querySelector('[role="alert"]')?.textContent.includes('Hubungi administrator')`);
+  assert.deepEqual(await evaluate(`JSON.parse(sessionStorage.getItem('k3l_session'))`), { role: 'guest' });
+  assert.equal(await evaluate(`!!document.querySelector('input[type="email"]')`), false, 'Refreshing a guest session must not show login');
+  assert.equal(await evaluate(`[...document.querySelectorAll('button')].some(button => button.textContent.includes('+ Tahun'))`), false, 'Restored guests must not gain admin controls');
+  await evaluate(`window.failYears = false`);
+  await clickText('Coba lagi');
+  await waitFor(`document.querySelector('[aria-label="Tahun pemantauan"]')?.options.length === 3`);
   await evaluate(`window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))`);
+  await delay(100);
+  assert.equal(await evaluate(`!!document.querySelector('input[type="email"]')`), false, 'History restoration must preserve a guest session');
+  await evaluate(`sessionStorage.removeItem('k3l_session'); window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))`);
   await waitFor(`!!document.querySelector('input[type="email"]')`);
-  console.log('PASS mobile: refresh requires login, created year persists on server, sidebar closes, history restores login');
+  for (const invalidSession of ['invalid-json', '{"role":"superadmin"}']) {
+    await evaluate(`sessionStorage.setItem('k3l_session', ${JSON.stringify(invalidSession)})`);
+    await send('Page.reload');
+    await waitFor(`!!document.querySelector('input[type="email"]')`);
+    assert.equal(await evaluate(`fixtureCalls.length`), 0, 'Invalid sessions must not start authenticated data loading');
+  }
+  console.log('PASS mobile: guest refresh preserves role, sidebar closes, history respects cleared sessions, invalid sessions require login');
   assert.deepEqual(exceptions, [], 'No uncaught browser errors');
 } finally {
   if (send && ws?.readyState === WebSocket.OPEN) await send('Browser.close').catch(() => {});

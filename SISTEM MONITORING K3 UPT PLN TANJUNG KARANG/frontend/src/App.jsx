@@ -11,6 +11,20 @@ import LogAktivitas from './components/LogAktivitas';
 import Modals from './components/Modals';
 import { DEFAULT_GAS_DEPLOYMENT_URL } from './gas-config';
 
+const SESSION_KEY = 'k3l_session';
+
+function readStoredSession() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+    if (saved?.role === 'admin' || saved?.role === 'guest') {
+      return { role: saved.role };
+    }
+  } catch {
+    // Sesi rusak atau storage tidak tersedia: tampilkan login seperti biasa.
+  }
+  return null;
+}
+
 // Daftar Nomor Indeks Kegiatan Standar per Kategori Utama
 const CATEGORY_INDEXES = {
   '1': ["1.1", "1.2", "1.3", "1.4"],
@@ -94,11 +108,12 @@ export default function App() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [session, setSession] = useState(readStoredSession);
+  const isLoggedIn = session !== null;
+  const userRole = session?.role || 'guest';
   const [formEmail, setFormEmail] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [userRole, setUserRole] = useState('guest');
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('k3l_dark_mode') === 'true');
 
   // STATE: Menampung konfigurasi nomor WA targets di Profil Admin
@@ -253,15 +268,18 @@ export default function App() {
     }
   };
 
-  // Sesi hanya berlaku selama halaman terbuka, termasuk saat kembali dari cache browser.
+  // Pulihkan sesi tab saat kembali dari cache; sesi yang sudah logout tetap berakhir.
   useEffect(() => {
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userRole');
-    const resetRestoredPage = event => {
-      if (event.persisted) handleLogout();
+    const restoreSession = event => {
+      if (!event.persisted) return;
+      const saved = readStoredSession();
+      if (saved) setSession(saved);
+      else handleLogout();
     };
-    window.addEventListener('pageshow', resetRestoredPage);
-    return () => window.removeEventListener('pageshow', resetRestoredPage);
+    window.addEventListener('pageshow', restoreSession);
+    return () => window.removeEventListener('pageshow', restoreSession);
   }, []);
 
   // Splash screen
@@ -444,11 +462,16 @@ export default function App() {
   };
 
   const startSession = role => {
+    const nextSession = { role: role === 'admin' ? 'admin' : 'guest' };
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(nextSession));
+    } catch (error) {
+      console.warn('Sesi tidak dapat disimpan untuk refresh:', error);
+    }
     setSidebarOpen(false);
     setActiveView('beranda');
-    setUserRole(role === 'admin' ? 'admin' : 'guest');
     setFormPassword('');
-    setIsLoggedIn(true);
+    setSession(nextSession);
   };
 
   const showToast = (message, type) => {
@@ -471,10 +494,15 @@ export default function App() {
 
   // Logout terpusat: hanya hapus sesi login, jangan menghapus pengaturan sistem.
   const handleLogout = () => {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch (error) {
+      console.warn('Penyimpanan sesi tidak dapat diakses:', error);
+    }
     localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userRole');
 
-    setIsLoggedIn(false);
+    setSession(null);
     setSidebarOpen(false);
     setNewYearModalOpen(false);
     setYearConfirmation(null);
@@ -486,7 +514,6 @@ export default function App() {
     setYearSheetIds({});
     setAvailableYears([]);
     setSelectedYear('2026');
-    setUserRole('guest');
     setProfileModalOpen(false);
     setSettingsModalOpen(false);
     setNotifDropdownOpen(false);
@@ -1252,7 +1279,7 @@ export default function App() {
             </div>
             )}
 
-            <button onClick={() => setProfileModalOpen(true)} className={`flex items-center gap-sm ${userRole === 'admin' ? 'pl-md border-l border-outline-variant' : ''} hover:bg-slate-100 p-1.5 rounded-xl transition-all active:scale-95 text-left`}>
+            <button aria-label="Buka profil" onClick={() => setProfileModalOpen(true)} className={`flex items-center gap-sm ${userRole === 'admin' ? 'pl-md border-l border-outline-variant' : ''} hover:bg-slate-100 p-1.5 rounded-xl transition-all active:scale-95 text-left`}>
               <div className="text-right hidden sm:block">
                 <p className="font-label-md text-label-md font-bold text-on-surface">{userRole === 'admin' ? 'Admin UPT' : 'Tamu UPT'}</p>
                 <p className="text-[10px] text-outline">Tanjung Karang</p>

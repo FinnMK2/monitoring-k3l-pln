@@ -43,7 +43,7 @@ Periksa ulang hingga respons berisi `status: "success"` dan `years` sesuai tab S
 
 ## Perilaku login, sidebar, dan tahun
 
-- Membuka atau me-refresh halaman selalu kembali ke login setelah animasi pembuka. Sesi admin/tamu tidak disimpan di browser. Kembali dari cache navigasi browser juga mengakhiri sesi.
+- Sesi admin/tamu disimpan di `sessionStorage` tab, sehingga refresh dan kembali dari cache navigasi browser tetap mempertahankan login. Hanya role sesi yang disimpan; email dan password tidak disimpan. Logout menghapus sesi, sedangkan sesi yang rusak atau role tidak dikenal kembali ke halaman login. Tab baru yang dibuka secara terpisah memerlukan login sendiri.
 - Sidebar mulai tertutup di desktop dan mobile, lalu menutup setelah memilih menu, klik di luar, memindahkan fokus ke konten, atau menekan Escape.
 - Dropdown tahun dibaca dari tab Spreadsheet saat masuk, membuka dialog tahun, dan kembali memfokuskan web. Nama tab harus memuat tahun utuh antara 2000 dan 2100, misalnya `Proker KAM 2027` atau `2027`.
 - Dialog **+ Tahun** menampilkan tahun yang sudah tersedia. Memilih atau memasukkan tahun yang sudah ada akan membuka data tersebut.
@@ -53,4 +53,4 @@ Periksa ulang hingga respons berisi `status: "success"` dan `years` sesuai tab S
 
 ## Pemeriksaan setelah deployment
 
-Masuk, pastikan 2027 muncul jika tabnya sudah tersedia, lalu buka tab itu. Untuk menambah tahun baru, pilih tahun sumber, isi tahun tujuan, periksa konfirmasi, dan lanjutkan hanya jika memang ingin membuat salinannya. Pastikan tab baru muncul di Spreadsheet, targetnya sama, realisasinya 0, dan tahun tetap tersedia setelah refresh dan login kembali.
+Masuk, lalu refresh dan pastikan sesi serta hak akses tetap sama. Klik Keluar Akun, refresh lagi, dan pastikan halaman login tampil. Pastikan 2027 muncul jika tabnya sudah tersedia, lalu buka tab itu. Untuk menambah tahun baru, pilih tahun sumber, isi tahun tujuan, periksa konfirmasi, dan lanjutkan hanya jika memang ingin membuat salinannya. Pastikan tab baru muncul di Spreadsheet, targetnya sama, realisasinya 0, dan tahun tetap tersedia setelah refresh.
